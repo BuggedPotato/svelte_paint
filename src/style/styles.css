@@ -1,0 +1,22 @@
+.bg-checkered {
+  background-color: #e5e5f7;
+  opacity: 1;
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgb(75, 75, 75) 25%,
+      transparent 25%,
+      transparent 75%,
+      rgb(75, 75, 75) 75%,
+      rgb(75, 75, 75)
+    ),
+    repeating-linear-gradient(
+      45deg,
+      rgb(75, 75, 75) 25%,
+      gray 25%,
+      gray 75%,
+      rgb(75, 75, 75) 75%,
+      rgb(75, 75, 75)
+    );
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+}

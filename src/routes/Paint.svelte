@@ -1,7 +1,9 @@
 <script>
-import  "../lib/Tailwind.css";
-import { savedTheme, themes, setTheme } from "../assets/themes.js"; 
+  import  "../lib/Tailwind.css";
+  import { savedTheme, themes, setTheme } from "../assets/themes.js"; 
   import { onMount } from "svelte";
+  import canvasHandlers from "../assets/scripts/canvasHandlers";
+
   let theme;
   savedTheme.subscribe( v =>{
     console.log( v )
@@ -15,12 +17,13 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
   let context;
   let paint = {
     drawing: false,
-    colour: { primary: "black", secondary: "white" },
+    colour: { primary: "#000000", secondary: "#ffffff" },
     drawSize: 2
   }
       
 
   onMount( () => {
+    console.log( window.getComputedStyle( canvasRef ).getPropertyValue("height") )
         canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
         canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
         console.log( canvasRef.width, canvasRef.height )
@@ -36,6 +39,9 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
     if( context ){
         context.strokeStyle = paint.colour.primary;
         context.fillStyle = paint.colour.primary;
+        context.lineWidth = paint.drawSize;
+        context.fillStyle = paint.colour.primary;
+        context.strokeStyle = paint.colour.primary;
     }
   }
 
@@ -48,8 +54,7 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
   const setListeners = () => {
     canvasRef.addEventListener( "mousedown", listenerHandlers.start, false );
     canvasRef.addEventListener( "mousemove", listenerHandlers.draw, false );
-    canvasRef.addEventListener( "touchstart", listenerHandlers.start, false );
-    canvasRef.addEventListener( "touchmove", listenerHandlers.draw, false );
+    canvasRef.addEventListener( "mouseup", listenerHandlers.end, false );
   }
 
   const listenerHandlers = {
@@ -57,6 +62,10 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
         paint.drawing = true;
         context.beginPath();
         context.moveTo( 
+            e.clientX - canvasRef.offsetLeft,
+            e.clientY - canvasRef.offsetTop
+        );
+        context.lineTo( 
             e.clientX - canvasRef.offsetLeft,
             e.clientY - canvasRef.offsetTop
         );
@@ -69,9 +78,17 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
             e.clientX - canvasRef.offsetLeft,
             e.clientY - canvasRef.offsetTop
         );
-        console.log( e.clientX, e.clientY )
-        console.log( canvasRef.offsetLeft, canvasRef.offsetTop )
+        // console.log( e.clientX - canvasRef.offsetLeft, e.clientY - canvasRef.offsetTop )
         context.stroke();
+        e.preventDefault();
+    },
+    end: ( e ) => {
+      if( !paint.drawing )
+        return;
+      context.stroke();
+      context.closePath();
+      paint.drawing = false;
+      e.preventDefault();
     }
   }
 
@@ -83,11 +100,13 @@ import { savedTheme, themes, setTheme } from "../assets/themes.js";
         <i class="bi-sun-fill mx-3 {theme.textMain}" style="font-size: 1.5rem" on:click={()=>setTheme( "light" )} />
         <i class="bi-bootstrap-fill {theme.textMain}" style="font-size: 1.5rem" on:click={()=>setTheme( "contrast" )}/>
     </div>
-    <div class="flex flex-col w-11/12 h-full">
+    <div class="flex flex-col w-11/12 h-5/6">
         <div id="tools">
             <i class="bi-arrow-90deg-left {theme.textMain}" style="font-size: 1.5rem" on:click={()=>console.log("undo")}/>
-            <i class="bi-arrow-90deg-right {theme.textMain}" style="font-size: 1.5rem" on:click={()=>console.log("redo")}/>
+            <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.clear(null, canvasRef) } />
+            <input type="range" min="1" max="30" bind:value={paint.drawSize} />
+            <input type="color" bind:value={paint.colour.primary} />
         </div>
-        <canvas id="canvas" class="w-full h-[80%] bg-checkered" bind:this={canvasRef}></canvas>
+        <canvas id="canvas" class="w-full h-full bg-checkered cursor-reticle" bind:this={canvasRef}></canvas>
     </div>
 </div>

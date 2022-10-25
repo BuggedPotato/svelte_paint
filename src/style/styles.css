@@ -20,3 +20,7 @@
   background-position: 0 0, 10px 10px;
   background-size: 20px 20px;
 }
+
+.foo {
+  background-image: url("https://bigrat.monster/media/bigrat.png");
+}

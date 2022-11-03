@@ -2,7 +2,7 @@
   import  "../lib/Tailwind.css";
   import { savedTheme, themes, setTheme } from "../assets/themes.js"; 
   import { onMount } from "svelte";
-  import canvasHandlers from "../assets/scripts/canvasHandlers";
+  import {canvasHandlers} from "../assets/scripts/canvasHandlers";
 
   let theme;
   savedTheme.subscribe( v =>{
@@ -14,6 +14,7 @@
 
 
   let canvasRef;
+  let canvasUnderlayRef;
   let context;
   let paint = {
     drawing: false,
@@ -23,9 +24,8 @@
       
 
   onMount( () => {
-        canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
-        canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
-        console.log( canvasRef.width, canvasRef.height )
+        canvasHandlers.resize( null, paint, canvasRef );
+        console.log( canvasRef.width, canvasRef.height );
         context = canvasRef.getContext( "2d" );
         context.lineCap = "round";
         context.lineJoin = "round";
@@ -44,47 +44,12 @@
   }
 
   const setListeners = () => {
-    canvasRef.addEventListener( "mousedown", listenerHandlers.start, false );
-    canvasRef.addEventListener( "mousemove", listenerHandlers.draw, false );
-    canvasRef.addEventListener( "mouseup", listenerHandlers.end, false );
+    canvasRef.addEventListener( "mousedown", (e)=> canvasHandlers.start(e, paint, canvasRef), false );
+    canvasRef.addEventListener( "mousemove", (e)=> canvasHandlers.draw(e, paint, canvasRef), false );
+    canvasRef.addEventListener( "mouseup", (e)=> canvasHandlers.end(e, paint, canvasRef), false );
 
-    window.addEventListener( "resize", listenerHandlers.resize, false );
-  }
-
-  const listenerHandlers = {
-    start: ( e ) => {
-        paint.drawing = true;
-        context.beginPath();
-        context.moveTo( 
-            e.clientX - canvasRef.offsetLeft,
-            e.clientY - canvasRef.offsetTop
-        );
-        context.lineTo( 
-            e.clientX - canvasRef.offsetLeft,
-            e.clientY - canvasRef.offsetTop
-        );
-    },
-    draw: ( e ) => {
-        if( !paint.drawing )
-            return;
-        context.lineTo( 
-            e.clientX - canvasRef.offsetLeft,
-            e.clientY - canvasRef.offsetTop
-        );
-        // console.log( e.clientX - canvasRef.offsetLeft, e.clientY - canvasRef.offsetTop )
-        context.stroke();
-    },
-    end: ( e ) => {
-      if( !paint.drawing )
-        return;
-      context.stroke();
-      context.closePath();
-      paint.drawing = false;
-    },
-    resize: ( e ) => {
-      canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
-      canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
-    }
+    window.addEventListener( "resize", (e)=> canvasHandlers.resize(e, paint, canvasRef), false );
+    window.addEventListener( "resize", (e)=> canvasHandlers.resize(e, paint, canvasUnderlayRef), false );
   }
 
 </script>
@@ -98,10 +63,14 @@
     <div class="flex flex-col w-11/12 h-5/6">
         <div id="tools">
             <i class="bi-arrow-90deg-left {theme.textMain}" style="font-size: 1.5rem" on:click={()=>console.log("undo")}/>
-            <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.clear(null, canvasRef) } />
+            <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.clear( canvasRef ) } />
+              <i class="bi-save2 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.save( canvasRef ) } />
             <input type="range" min="1" max="30" bind:value={paint.drawSize} />
             <input type="color" bind:value={paint.colour.primary} />
         </div>
-        <canvas id="canvas" class="w-full h-full bg-checkered cursor-crosshair" bind:this={canvasRef}></canvas>
+        <div class="grid-container w-full h-full">
+          <canvas id="canvas" class="grid-area-main bg-checkered w-full h-full z-10 cursor-crosshair" bind:this={canvasRef}></canvas>
+          <canvas id="canvasUnderlay" class="grid-area-main w-full h-full cursor-crosshair" bind:this={canvasUnderlayRef}></canvas>
+        </div>
     </div>
 </div>

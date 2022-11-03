@@ -1,0 +1,9 @@
+.grid-container{
+    display: grid;
+    grid-template-areas: main;
+}
+
+.grid-area-main{
+    display: grid;
+    grid-area: main;
+}

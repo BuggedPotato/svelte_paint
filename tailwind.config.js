@@ -3,7 +3,7 @@ module.exports = {
   theme: {
     extend: {
       cursor: {
-        reticle: 'url("./src/assets/reticle_cursor.png") 64 64, crosshair',
+        reticle: 'url("./src/assets/reticle_cursor.cur") 32 32, crosshair',
       },
     },
   },

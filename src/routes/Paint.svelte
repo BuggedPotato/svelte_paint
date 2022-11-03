@@ -23,7 +23,6 @@
       
 
   onMount( () => {
-    console.log( window.getComputedStyle( canvasRef ).getPropertyValue("height") )
         canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
         canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
         console.log( canvasRef.width, canvasRef.height )
@@ -31,7 +30,6 @@
         context.lineCap = "round";
         context.lineJoin = "round";
         context.lineWidth = paint.drawSize;
-        // background( "white" )
         setListeners();
   } );
   
@@ -45,16 +43,12 @@
     }
   }
 
-
-  const background = ( colour ) => {
-    context.fillStyle = colour;
-    context.fillRect( 0, 0, canvasRef.width, canvasRef.height );
-  }
-
   const setListeners = () => {
     canvasRef.addEventListener( "mousedown", listenerHandlers.start, false );
     canvasRef.addEventListener( "mousemove", listenerHandlers.draw, false );
     canvasRef.addEventListener( "mouseup", listenerHandlers.end, false );
+
+    window.addEventListener( "resize", listenerHandlers.resize, false );
   }
 
   const listenerHandlers = {
@@ -69,7 +63,6 @@
             e.clientX - canvasRef.offsetLeft,
             e.clientY - canvasRef.offsetTop
         );
-        e.preventDefault();
     },
     draw: ( e ) => {
         if( !paint.drawing )
@@ -80,7 +73,6 @@
         );
         // console.log( e.clientX - canvasRef.offsetLeft, e.clientY - canvasRef.offsetTop )
         context.stroke();
-        e.preventDefault();
     },
     end: ( e ) => {
       if( !paint.drawing )
@@ -88,7 +80,10 @@
       context.stroke();
       context.closePath();
       paint.drawing = false;
-      e.preventDefault();
+    },
+    resize: ( e ) => {
+      canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
+      canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
     }
   }
 
@@ -107,6 +102,6 @@
             <input type="range" min="1" max="30" bind:value={paint.drawSize} />
             <input type="color" bind:value={paint.colour.primary} />
         </div>
-        <canvas id="canvas" class="w-full h-full bg-checkered cursor-reticle" bind:this={canvasRef}></canvas>
+        <canvas id="canvas" class="w-full h-full bg-checkered cursor-crosshair" bind:this={canvasRef}></canvas>
     </div>
 </div>

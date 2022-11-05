@@ -14,23 +14,24 @@ export const canvasHandlers = {
     paint.drawing = true;
     context.beginPath();
     context.moveTo( 
-        e.clientX - canvasRef.offsetLeft,
-        e.clientY - canvasRef.offsetTop
+        e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX,
+        e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
     );
     context.lineTo( 
-        e.clientX - canvasRef.offsetLeft,
-        e.clientY - canvasRef.offsetTop
+        e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX,
+        e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
     );
   },
   draw: ( e, paint, canvasRef ) => {
       let context = canvasRef.getContext("2d");
+      context.lineCap = "round";
+      context.lineJoin = "round"; 
       if( !paint.drawing )
           return;
       context.lineTo( 
-          e.clientX - canvasRef.offsetLeft,
-          e.clientY - canvasRef.offsetTop
+          e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX, // ??????????????????///
+          e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
       );
-      // console.log( e.clientX - canvasRef.offsetLeft, e.clientY - canvasRef.offsetTop )
       context.stroke();
   },
   end: ( e, paint, canvasRef ) => {

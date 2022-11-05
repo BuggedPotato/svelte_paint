@@ -1,9 +1,4 @@
-.grid-container{
-    display: grid;
-    grid-template-areas: main;
-}
-
-.grid-area-main{
-    display: grid;
-    grid-area: main;
+input[type=color]::-webkit-color-swatch{
+    border: none;
+    border-radius: 1px;
 }

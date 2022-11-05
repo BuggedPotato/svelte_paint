@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import {canvasHandlers} from "../assets/scripts/canvasHandlers";
   import { tools } from "../assets/scripts/tools";
+  import { DrawType } from "../assets/scripts/EDrawType";
 
   let theme;
   savedTheme.subscribe( v =>{
@@ -13,43 +14,53 @@
     window.document.body.classList.add( theme.bgMain );
   });
 
-
   let canvasRef;
   let canvasUnderlayRef;
   let context;
   let paint = {
     drawing: false,
     colour: { primary: "#000000", secondary: "#ffffff" },
-    drawSize: 2
+    drawSize: 2,
+    history: [],
+    drawType: DrawType.FreeLine,
+    drawObject: null,
+    
   }
-      
+  
+  $: redraw( canvasUnderlayRef, paint );
+
+  function redraw( c, paint ) {
+    if( !c ){
+      // console.warn( "no canvas" )
+      return;
+    }
+    canvasHandlers.clear( c );
+    paint.history.map( ( obj )=>{
+      obj.draw( c );
+    } );
+  }
 
   onMount( () => {
     canvasHandlers.resize( null, paint, canvasRef );
     canvasHandlers.resize( null, paint, canvasUnderlayRef );
     console.log( canvasRef.width, canvasRef.height );
-    context = canvasRef.getContext( "2d" );
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.lineWidth = paint.drawSize;
+    canvasHandlers.setCanvasProps( canvasRef, paint );
+    canvasHandlers.setCanvasProps( canvasUnderlayRef, paint );
     setListeners();        
   } );
   
 
   $:{
-    if( context ){
-        context.strokeStyle = paint.colour.primary;
-        context.fillStyle = paint.colour.primary;
-        context.lineWidth = paint.drawSize;
-        context.fillStyle = paint.colour.primary;
-        context.strokeStyle = paint.colour.primary;
-    }
+    if( canvasRef )
+      canvasHandlers.setCanvasProps( canvasRef, paint );
+    if( canvasUnderlayRef )
+      canvasHandlers.setCanvasProps( canvasUnderlayRef, paint );
   }
 
   const setListeners = () => {
     canvasRef.addEventListener( "mousedown", (e)=> canvasHandlers.start(e, paint, canvasRef), false );
     canvasRef.addEventListener( "mousemove", (e)=> canvasHandlers.draw(e, paint, canvasRef), false );
-    canvasRef.addEventListener( "mouseup", (e)=> canvasHandlers.end(e, paint, canvasRef), false );
+    canvasRef.addEventListener( "mouseup", (e)=> {canvasHandlers.end(e, paint, canvasRef); paint.history = paint.history }, false );
 
     window.addEventListener( "resize", (e)=>{ canvasHandlers.resize(e, paint, canvasRef); canvasHandlers.resize(e, paint, canvasUnderlayRef) }, false );
   }
@@ -64,9 +75,9 @@
     </div>
     <div class="flex flex-col w-full h-fit">
         <div id="tools">
-            <i class="bi-arrow-90deg-left {theme.textMain}" style="font-size: 1.5rem" on:click={()=>console.log("undo")}/>
-            <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.clear( canvasRef ) } />
-            <i class="bi-save2 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.save( canvasRef ) } />
+            <i class="bi-arrow-90deg-left {theme.textMain}" style="font-size: 1.5rem" on:click={(e)=> {canvasHandlers.undo( e, paint ); paint = paint}}/>
+            <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=>{ canvasHandlers.clear( canvasUnderlayRef ); paint.history.length = 0} } />
+            <i class="bi-save2 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.save( canvasUnderlayRef ) } />
             <input id="size-input" type="range" min="0.5" max="6" step="0.1" on:input={ (e)=>{ paint.drawSize = tools.brushSizeFromInput( e ) } } /> <!-- TODO starting vluae -->
             <label for="size-input" class="{theme.textMain}">{paint.drawSize}</label>
             <div class="flex relative h-full w-fit">

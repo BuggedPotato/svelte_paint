@@ -1,5 +1,9 @@
+import { DrawType } from "./EDrawType";
+import { FreeLine } from "./classes/FreeLine";
+import { Point } from "./classes/Point";
+
 export const canvasHandlers = {
-  clear: (c) => {
+  clear: ( c ) => {
     const ctx = c.getContext("2d");
     ctx.clearRect(0, 0, c.width, c.height);
   },
@@ -9,45 +13,67 @@ export const canvasHandlers = {
     ctx.fillStyle = colour;
     ctx.fillRect( 0, 0, c.width, c.height );
   },
-  start: ( e, paint, canvasRef ) => {
-    let context = canvasRef.getContext("2d");
+  
+  setCanvasProps: ( c, paint ) => {
+    const context = c.getContext( "2d" );
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.strokeStyle = paint.colour.primary;
+    context.fillStyle = paint.colour.primary;
+    context.lineWidth = paint.drawSize;
+  },
+
+  start: ( e, paint, c ) => {
+    const start = { x: e.clientX - c.parentNode.offsetLeft + window.scrollX,
+    y: e.clientY - c.parentNode.offsetTop + window.scrollY };
     paint.drawing = true;
-    context.beginPath();
-    context.moveTo( 
-        e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX,
-        e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
-    );
-    context.lineTo( 
-        e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX,
-        e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
-    );
+    switch( paint.drawType ){
+      case DrawType.FreeLine:
+        paint.drawObject = new FreeLine( start.x, start.y, paint.colour.primary, paint.drawSize );
+      break;
+    }
+    paint.drawObject.draw( c );
+    console.log( paint.history )
   },
-  draw: ( e, paint, canvasRef ) => {
-      let context = canvasRef.getContext("2d");
-      context.lineCap = "round";
-      context.lineJoin = "round"; 
-      if( !paint.drawing )
-          return;
-      context.lineTo( 
-          e.clientX - canvasRef.parentNode.offsetLeft + window.scrollX, // ??????????????????///
-          e.clientY - canvasRef.parentNode.offsetTop + window.scrollY
-      );
-      context.stroke();
+  draw: ( e, paint, c ) => {
+    canvasHandlers.clear( c );
+    if( !paint.drawing )
+        return;
+    switch( paint.drawType ){
+      case DrawType.FreeLine:
+        paint.drawObject.points.push( new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
+          e.clientY - c.parentNode.offsetTop + window.scrollY ) );
+      break;
+    }
+    paint.drawObject.draw( c );
   },
-  end: ( e, paint, canvasRef ) => {
-    let context = canvasRef.getContext("2d");
+  end: ( e, paint, c ) => {
     if( !paint.drawing )
       return;
-    context.stroke();
-    context.closePath();
+    switch( paint.drawType ){
+      case DrawType.FreeLine:
+        paint.drawObject.end = new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
+          e.clientY - c.parentNode.offsetTop + window.scrollY );
+      break;
+    }
+    const foo = paint.drawObject;
+    paint.history = [ ...paint.history, foo ];
+    paint.drawObject = null;
     paint.drawing = false;
+    console.log( paint.history )
   },
+
   resize: ( e, paint, canvasRef ) => {
-    // console.log( window.getComputedStyle( canvasRef ).getPropertyValue("width"), window.getComputedStyle( canvasRef ).getPropertyValue("height") )
     canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
     canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
     paint.drawSize = 1;
   },
+
+  undo: ( e, paint ) => {
+    console.log( "Undo" );
+    paint.history.pop();
+  },
+  
   save: ( canvasRef ) => {
     let link = document.createElement( "a" );
     const name = "paint_" + canvasHandlers.getCurrentDateTimeStr() + ".png";

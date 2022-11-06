@@ -3,6 +3,8 @@ import { FreeLine } from "./classes/FreeLine";
 import { Point } from "./classes/Point";
 import { Rectangle } from "./classes/Rectangle";
 import { Triangle } from "./classes/Triangle";
+import { Circle } from "./classes/Circle";
+import { Line } from "./classes/Line";
 
 export const canvasHandlers = {
   clear: ( c ) => {
@@ -33,15 +35,21 @@ export const canvasHandlers = {
       case DrawType.FreeLine:
         paint.drawObject = new FreeLine( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
       break;
+      case DrawType.Line:
+        paint.drawObject = new Line( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
+      break;
       case DrawType.Rectangle:
         paint.drawObject = new Rectangle( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
-        paint.drawObject.end = start;
       break;
       case DrawType.Triangle:
         paint.drawObject = new Triangle( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
-        paint.drawObject.end = start;
+      break;
+      case DrawType.Circle:
+        paint.drawObject = new Circle( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
       break;
     }
+    if( paint.drawType != DrawType.FreeLine )
+      paint.drawObject.end = start;
     paint.drawObject.draw( c );
     console.log( paint.history )
   },
@@ -64,23 +72,39 @@ export const canvasHandlers = {
   end: ( e, paint, c ) => {
     if( !paint.drawing )
       return;
-    // switch( paint.drawType ){
-    //   case DrawType.FreeLine:
-        paint.drawObject.end = new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
-          e.clientY - c.parentNode.offsetTop + window.scrollY );
-    //   break;
-    // }
+    paint.drawObject.end = new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
+      e.clientY - c.parentNode.offsetTop + window.scrollY );
     const foo = paint.drawObject;
-    paint.history = [ ...paint.history, foo ];
+    paint.history.push( foo );
     paint.drawObject = null;
     paint.drawing = false;
     console.log( paint.history )
   },
 
   resize: ( e, paint, canvasRef ) => {
-    canvasRef.width = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") );
-    canvasRef.height = parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") );
+    const size = { x: parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("width") ), y: parseInt( window.getComputedStyle( canvasRef ).getPropertyValue("height") ) };
+    paint.relScale = size.x / canvasRef.width;
+    canvasRef.style.height = size.x * 9/16 + "px";
+    canvasRef.height = size.x * 9/16;
+    canvasRef.width = size.x;
     paint.drawSize = 1;
+  },
+
+  redraw: ( c, paint ) => {
+    if( !c )
+      return;
+    canvasHandlers.clear( c );
+    paint.history.map( ( obj )=>{
+      obj.draw( c );
+    } );
+  },
+
+  setNewScale: ( c, paint ) => {
+    if( !c )
+      return;
+    paint.history.map( ( obj )=>{
+      obj.scale *= paint.relScale;
+    } );
   },
 
   undo: ( e, paint ) => {

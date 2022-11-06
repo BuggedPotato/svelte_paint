@@ -1,32 +1,31 @@
 import { BaseFigure } from "./BaseFigure";
+import { Point } from "./Point";
+export class Line extends BaseFigure {
 
-export class Rectangle extends BaseFigure {
-    
-    draw( c ) {
+    draw( c ){
         const ctx = c.getContext( "2d" );
         ctx.strokeStyle = this.colour;
         ctx.fillStyle = this.colour;
         ctx.lineWidth = this.width;
         ctx.beginPath();
         ctx.moveTo( this.start.x, this.start.y );
-        ctx.lineTo( this.end.x, this.start.y );
         ctx.lineTo( this.end.x, this.end.y );
-        ctx.lineTo( this.start.x, this.end.y );
-        ctx.closePath();
         ctx.stroke();
+        ctx.closePath();
     }
 
     set end( point ) {
-        if( this.keepRatio ) {
-            const fooY = this.start.y + Math.abs(point.x - this.start.x) * (point.y <= this.start.y ? -1 : 1 );
-            this._end = { x: point.x, y: fooY }
-        }else
+        if( this.keepRatio ){
+            const diff =  { x: Math.abs( point.x - this._start.x ), y: Math.abs( point.y - this._start.y ) };
+            if( diff.x > diff.y )
+            this._end = new Point( point.x, this._start.y );
+            else
+            this._end = new Point( this._start.x, point.y );
+        } else
             this._end = point;
+            
     }
     get end() {
         return { x: this._end.x * this.scale, y: this._end.y * this.scale };
-    }
-    get start(){
-        return { x: this._start.x * this.scale, y: this._start.y * this.scale };
     }
 }

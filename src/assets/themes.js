@@ -5,18 +5,21 @@ export const themes = {
         bgMain: "bg-[#111827]",
         bgMainHexadec: "#111827",
         textMain: "text-gray-200",
+        textMainHexadec: "#e5e7eb",
         borderMain: "border-[#21283b]"
     },
     light: {
         bgMain: "bg-gray-200",
         bgMainHexadec: "#e5e7eb",
         textMain: "text-gray-900",
+        textMainHexadec: "#111827",
         borderMain: "border-gray-900 "
     },
     contrast: {
         bgMain: "bg-black",
         bgMainHexadec: "#000000",
         textMain: "text-[yellow]",
+        textMainHexadec: "#ffff00",
         borderMain: "border-white"
     }
 }

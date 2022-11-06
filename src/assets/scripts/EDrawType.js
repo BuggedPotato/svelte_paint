@@ -1,4 +1,5 @@
 export const DrawType = {
     FreeLine: "FreeLine",
-    Rectangle: "Rectangle"
+    Rectangle: "Rectangle",
+    Triangle: "Triangle"
 }

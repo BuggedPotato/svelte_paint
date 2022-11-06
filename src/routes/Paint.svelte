@@ -24,7 +24,7 @@
     history: [],
     drawType: DrawType.FreeLine,
     drawObject: null,
-    
+    keepRatio: false
   }
   
   $: redraw( canvasUnderlayRef, paint );
@@ -78,8 +78,16 @@
             <i class="bi-arrow-90deg-left {theme.textMain}" style="font-size: 1.5rem" on:click={(e)=> {canvasHandlers.undo( e, paint ); paint = paint}}/>
             <i class="bi-trash3 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=>{ canvasHandlers.clear( canvasUnderlayRef ); paint.history.length = 0} } />
             <i class="bi-save2 {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> canvasHandlers.save( canvasUnderlayRef ) } />
-            <input id="size-input" type="range" min="0.5" max="6" step="0.1" on:input={ (e)=>{ paint.drawSize = tools.brushSizeFromInput( e ) } } /> <!-- TODO starting vluae -->
+            <input id="size-input" type="range" class="ml-5" min="0.5" max="6" step="0.1" on:input={ (e)=>{ paint.drawSize = tools.brushSizeFromInput( e ) } } /> <!-- TODO starting vluae -->
             <label for="size-input" class="{theme.textMain}">{paint.drawSize}</label>
+            
+            <i class="bi-brush {theme.textMain} ml-5" style="font-size: 1.5rem" on:click={ ()=> paint.drawType = DrawType.FreeLine } />
+            <i class="bi-square {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> paint.drawType = DrawType.Rectangle } />
+            <i class="bi-triangle {theme.textMain}" style="font-size: 1.5rem" on:click={ ()=> paint.drawType = DrawType.Triangle } />
+           
+            <label for="keep-ratio" class="{theme.textMain} ml-5">Keep ratio:</label>
+            <input id="keep-ratio" type="checkbox" bind:checked={paint.keepRatio} />
+
             <div class="flex relative h-full w-fit">
               <input type="color" bind:value={paint.colour.primary} class="h-10 w-10 absolute z-10 bg-transparent appearance-none border-none" />
               <input type="color" bind:value={paint.colour.secondary} class="h-10 top-5 absolute left-5 w-10 bg-transparent appearance-none border-none" />

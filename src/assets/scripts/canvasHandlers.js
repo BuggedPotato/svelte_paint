@@ -1,6 +1,8 @@
 import { DrawType } from "./EDrawType";
 import { FreeLine } from "./classes/FreeLine";
 import { Point } from "./classes/Point";
+import { Rectangle } from "./classes/Rectangle";
+import { Triangle } from "./classes/Triangle";
 
 export const canvasHandlers = {
   clear: ( c ) => {
@@ -29,7 +31,15 @@ export const canvasHandlers = {
     paint.drawing = true;
     switch( paint.drawType ){
       case DrawType.FreeLine:
-        paint.drawObject = new FreeLine( start.x, start.y, paint.colour.primary, paint.drawSize );
+        paint.drawObject = new FreeLine( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
+      break;
+      case DrawType.Rectangle:
+        paint.drawObject = new Rectangle( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
+        paint.drawObject.end = start;
+      break;
+      case DrawType.Triangle:
+        paint.drawObject = new Triangle( start.x, start.y, paint.colour.primary, paint.drawSize, paint.keepRatio );
+        paint.drawObject.end = start;
       break;
     }
     paint.drawObject.draw( c );
@@ -39,10 +49,14 @@ export const canvasHandlers = {
     canvasHandlers.clear( c );
     if( !paint.drawing )
         return;
+    const cursor = new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
+      e.clientY - c.parentNode.offsetTop + window.scrollY );
     switch( paint.drawType ){
       case DrawType.FreeLine:
-        paint.drawObject.points.push( new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
-          e.clientY - c.parentNode.offsetTop + window.scrollY ) );
+        paint.drawObject.points.push( cursor );
+      break;
+      default:
+          paint.drawObject.end = cursor;
       break;
     }
     paint.drawObject.draw( c );
@@ -50,12 +64,12 @@ export const canvasHandlers = {
   end: ( e, paint, c ) => {
     if( !paint.drawing )
       return;
-    switch( paint.drawType ){
-      case DrawType.FreeLine:
+    // switch( paint.drawType ){
+    //   case DrawType.FreeLine:
         paint.drawObject.end = new Point( e.clientX - c.parentNode.offsetLeft + window.scrollX,
           e.clientY - c.parentNode.offsetTop + window.scrollY );
-      break;
-    }
+    //   break;
+    // }
     const foo = paint.drawObject;
     paint.history = [ ...paint.history, foo ];
     paint.drawObject = null;

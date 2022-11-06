@@ -12,7 +12,7 @@ export class FreeLine extends BaseFigure {
         this.points.map( ( point )=>{
             ctx.lineTo( point.x, point.y );
         } );
-        ctx.lineTo( this.end.x, this.end.y );
+        ctx.lineTo( this._end.x, this._end.y );
         ctx.stroke();
         ctx.closePath();
     }

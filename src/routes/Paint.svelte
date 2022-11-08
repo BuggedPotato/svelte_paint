@@ -24,27 +24,11 @@
     drawType: DrawType.FreeLine,
     drawObject: null,
     keepRatio: false,
-    relScale: 1 // scale of canvas relative to last size
+    fill: false,
+    relScale: 1, // scale of canvas relative to last size
   }
   
   $: canvasHandlers.redraw( canvasUnderlayRef, paint );
-
-  // function redraw( c, paint ) {
-  //   if( !c )
-  //     return;
-  //   canvasHandlers.clear( c );
-  //   paint.history.map( ( obj )=>{
-  //     obj.draw( c );
-  //   } );
-  // }
-
-  // function setNewScale( c, paint ) {
-  //   if( !c )
-  //     return;
-  //   paint.history.map( ( obj )=>{
-  //     obj.scale *= paint.relScale;
-  //   } );
-  // }
 
   onMount( () => {
     canvasHandlers.resize( null, paint, canvasRef );
@@ -76,22 +60,47 @@
       canvasHandlers.setNewScale( canvasUnderlayRef, paint );
       canvasUnderlayRef = canvasUnderlayRef; // redraw
     }, false );
+
+    window.addEventListener( "keydown", (e)=>{
+      switch( e.code ){
+        case 'KeyX':
+          tools.swapColours(paint);
+          paint = paint;
+        break;
+        case 'ControlLeft':
+          paint.keepRatio = true;
+          if( paint.drawObject )
+            paint.drawObject.keepRatio = paint.keepRatio;
+        break;
+      }
+    }, false );
+
+    window.addEventListener( "keyup", (e)=>{
+      switch( e.code ){
+        case 'ControlLeft':
+          paint.keepRatio = false;
+          if( paint.drawObject )
+            paint.drawObject.keepRatio = paint.keepRatio;
+        break;
+      }
+    }, false );
   }
 
 </script>
 
-<div class="w-screen h-screen flex items-center flex-col">
+<div class="w-100 h-100 flex items-center flex-col">
   <div class="flex w-full h-fit">
     <i class="bi-moon-stars {theme.textMain}" style="font-size: 1.5rem" on:click={()=>setTheme( "dark" )}/>
     <i class="bi-sun-fill mx-3 {theme.textMain}" style="font-size: 1.5rem" on:click={()=>setTheme( "light" )} />
     <i class="bi-bootstrap-fill {theme.textMain}" style="font-size: 1.5rem" on:click={()=>setTheme( "contrast" )}/>
   </div>
   <div class="flex flex-col w-full h-fit">
-    <div id="tools" class="flex flex-row p-2 items-center">
+    <div id="tools" class="flex flex-wrap flex-row p-2 items-center my-4">
       <i class="bi-arrow-90deg-left {theme.textMain} mr-2 text-[1.5rem]" on:click={(e)=> {canvasHandlers.undo( e, paint ); paint = paint}}/>
       <i class="bi-trash3 {theme.textMain} mr-2 text-[1.5rem]" on:click={ ()=>{ canvasHandlers.clear( canvasUnderlayRef ); paint.history.length = 0} } />
-      <i class="bi-save2 {theme.textMain} mr-2 text-[1.5rem]" on:click={ ()=> canvasHandlers.save( canvasUnderlayRef ) } />
-      <input id="size-input" type="range" class="ml-5 mr-2" min="0.5" max="6" step="0.1" on:input={ (e)=>{ paint.drawSize = tools.brushSizeFromInput( e ) } } /> <!-- TODO starting vluae -->
+      <i class="bi-save2 {theme.textMain} mr-2 text-[1.5rem]" on:click={ ()=> {canvasHandlers.save( canvasUnderlayRef )} } />
+      <i class="bi-paint-bucket {theme.textMain} mr-2 text-[1.5rem]" on:click={ ()=>{ canvasHandlers.background( paint ); paint = paint; } } />
+      <input id="size-input" bind:value={paint.drawSize} type="range" class="ml-5 mr-2" min="1" max="100" step="1" /> <!-- TODO starting vluae -->
       <label for="size-input" class="{theme.textMain} text-[1.25rem]">{paint.drawSize}</label>
       
       <i class="bi-brush {theme.textMain} ml-5 mr-2" style="font-size: 1.5rem" on:click={ ()=> paint.drawType = DrawType.FreeLine } />
@@ -102,10 +111,22 @@
       
       <label for="keep-ratio" class="{theme.textMain} ml-5 mr-2">Keep ratio:</label>
       <input id="keep-ratio" type="checkbox" bind:checked={paint.keepRatio} />
+      <label for="fill" class="{theme.textMain} ml-5 mr-2">Fill:</label>
+      <input id="fill" type="checkbox" bind:checked={paint.fill} />
 
-      <div class="flex relative h-full m-3" style="margin-top: -1.5rem;">
-        <input type="color" bind:value={paint.colour.primary} class="h-10 w-10 absolute z-10 bg-transparent appearance-none border-none" style="--border-color: {theme.textMainHexadec}" />
-        <input type="color" bind:value={paint.colour.secondary} class="h-10 top-5 absolute left-5 w-10 bg-transparent appearance-none border-none" style="--border-color: {theme.textMainHexadec}" />
+      <div class="flex flex-row flex wrap mx-5">
+        <div class="flex flex-row flex-wrap">
+          <div on:click={()=> paint.colour.primary = "#dc2626" } class="h-8 w-8 bg-red-600"></div>
+          <div on:click={()=> paint.colour.primary = "#fb923c" } class="h-8 w-8 bg-orange-400"></div>
+          <div on:click={()=> paint.colour.primary = "#facc15" } class="h-8 w-8 bg-yellow-400"></div>
+          <div on:click={()=> paint.colour.primary = "#15803d" } class="h-8 w-8 bg-green-700"></div>
+          <div on:click={()=> paint.colour.primary = "#1d4ed8" } class="h-8 w-8 bg-blue-700"></div>
+          <div on:click={()=> paint.colour.primary = "#7e22ce" } class="h-8 w-8 bg-purple-700"></div>
+        </div>
+        <div class="flex relative h-full m-3" style="margin-top: 0;">
+          <input type="color" bind:value={paint.colour.primary} class="h-10 w-10 absolute z-10 bg-transparent appearance-none border-none" style="--border-color: {theme.textMainHexadec}" />
+          <input type="color" bind:value={paint.colour.secondary} class="h-10 top-3 absolute left-6 w-10 bg-transparent appearance-none border-none" style="--border-color: {theme.textMainHexadec}" />
+        </div>
       </div>
     </div>
   </div>
@@ -114,7 +135,6 @@
     <canvas id="canvasUnderlay" class="absolute w-full bg-checkered h-full" bind:this={canvasUnderlayRef}></canvas>
   </div>
 </div>
-<button on:click={(e)=> {tools.swapColours(e, paint); paint = paint;}} >kdahkwdh</button>
 
 <style>
   input[type=color]::-webkit-color-swatch{
